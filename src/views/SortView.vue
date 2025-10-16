@@ -67,7 +67,7 @@ import axios from 'axios';
 // --- 响应式状态 ---
 const array = ref([]);
 const arrayCount = ref(10); // 改为 ref，使其可动态修改
-const animationSpeed = ref(50);
+const animationSpeed = ref(250);
 const isSorting = ref(false);
 const isLoading = ref(false); // 新增：加载状态
 const fetchError = ref(null); // 新增：错误信息
@@ -78,9 +78,9 @@ const maxValue = 400; // 条形图最大高度
 const barGap = 2; // 条形图之间的间隔
 
 // --- 排序过程中的状态 ---
-const comparingIndices = ref([]);
-const swappingIndices = ref([]);
-const sortedIndices = ref([]);
+const yellowIndices = ref([]);
+const redIndices = ref([]);
+const blueIndices = ref([]);
 
 // --- 计算属性 (Computed Properties) ---
 
@@ -103,16 +103,16 @@ const containerWidth = computed(() => {
 const resetState = () => {
   isSorting.value = false;
   fetchError.value = null;
-  comparingIndices.value = [];
-  swappingIndices.value = [];
-  sortedIndices.value = [];
+  yellowIndices.value = [];
+  redIndices.value = [];
+  blueIndices.value = [];
 };
 
 // 根据索引获取条形图的颜色
 const getBarColor = (index) => {
-  if (swappingIndices.value.includes(index)) return '#e74c3c'; // 红色 - 交换
-  if (comparingIndices.value.includes(index)) return '#f1c40f'; // 黄色 - 比较
-  if (sortedIndices.value.includes(index)) return '#2ecc71'; // 绿色 - 已排序
+  if (redIndices.value.includes(index)) return '#e74c3c'; // 红色 - 交换
+  if (yellowIndices.value.includes(index)) return '#f1c40f'; // 黄色 - 比较
+  if (blueIndices.value.includes(index)) return '#2ecc71'; // 绿色 - 已排序
   return '#3498db'; // 蓝色 - 默认
 };
 
@@ -148,6 +148,41 @@ const fetchArrayFromBackend = async () => {
 // 暂停函数
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// 处理后端返回的排序步骤（冒泡排序）
+const processBubbleSteps = async () => {
+  const n = steps.value.length;
+  for (let i = 0; i < n; i++) {
+    const step = steps.value[i];
+    if (!step || step.length === 0) continue;
+
+    switch (step[0]) {
+      case 1:
+        yellowIndices.value = step.slice(1);
+        await sleep(animationSpeed.value);
+        yellowIndices.value = [];
+        break;
+      case 2:
+        redIndices.value = step.slice(1);
+        await sleep(animationSpeed.value);
+        [array.value[step[1]], array.value[step[2]]] = [array.value[step[2]], array.value[step[1]]];
+        await sleep(animationSpeed.value);
+        redIndices.value = [];
+        break;
+      case 3:
+        redIndices.value = step.slice(1);
+        await sleep(animationSpeed.value);
+        break;
+      case 4:
+        blueIndices.value.push(step[1]);
+        break;
+      default:
+        break;
+    }
+  }
+  await sleep(1000);
+  resetState();
+};
+
 // 冒泡排序逻辑
 const startBubbleSort = async () => {
   if (isSorting.value || array.value.length === 0) return;
@@ -164,29 +199,8 @@ const startBubbleSort = async () => {
   } finally {
     isLoading.value = false;
   }
-  const n = steps.value.length;
 
-  let j = 0;
-  for(let i = 0; i < n; i++){
-    comparingIndices.value = [steps.value[i][0], steps.value[i][1]];
-    await sleep(animationSpeed.value);
-    if(steps.value[i][2] === 1){
-      swappingIndices.value = [steps.value[i][0], steps.value[i][1]];
-      await sleep(animationSpeed.value);
-      [array.value[steps.value[i][0]], array.value[steps.value[i][1]]] = [array.value[steps.value[i][1]], array.value[steps.value[i][0]]];
-      await sleep(animationSpeed.value);
-      swappingIndices.value = [];
-    }
-    if(steps.value[i][3] !== -1){
-      sortedIndices.value.push(steps.value[i][3]);
-    }
-  }
-  comparingIndices.value = [];
-  sortedIndices.value.push(0);
-
-  await sleep(1000);
-
-  resetState();
+  await processBubbleSteps();
 };
 
 // 简单选择排序逻辑
@@ -209,22 +223,22 @@ const startSimpleSelectSort = async () => {
 
   let j = 0;
   for(let i = 0; i < n; i++){
-    comparingIndices.value = [steps.value[i][0]];
-    swappingIndices.value = [steps.value[i][1]];
+    yellowIndices.value = [steps.value[i][0]];
+    redIndices.value = [steps.value[i][1]];
     await sleep(animationSpeed.value);
     if(steps.value[i][2] !== -1){
-      swappingIndices.value = [steps.value[i][1], steps.value[i][2]];
+      redIndices.value = [steps.value[i][1], steps.value[i][2]];
       await sleep(animationSpeed.value);
       [array.value[steps.value[i][0]], array.value[steps.value[i][1]]] = [array.value[steps.value[i][1]], array.value[steps.value[i][0]]];
       await sleep(animationSpeed.value);
-      sortedIndices.value.push(steps.value[i][2]);
+      blueIndices.value.push(steps.value[i][2]);
     }
   }
-  comparingIndices.value = [];
-  swappingIndices.value = [];
-  sortedIndices.value.push(0);
+  yellowIndices.value = [];
+  redIndices.value = [];
+  blueIndices.value.push(0);
 
-  await sleep(1000);
+  await sleep(1500);
 
   resetState();
 };
