@@ -170,7 +170,6 @@ const processBubbleSteps = async () => {
         break;
       case 3:
         redIndices.value = step.slice(1);
-        await sleep(animationSpeed.value);
         break;
       case 4:
         blueIndices.value.push(step[1]);
@@ -219,28 +218,8 @@ const startSimpleSelectSort = async () => {
   } finally {
     isLoading.value = false;
   }
-  const n = steps.value.length;
 
-  let j = 0;
-  for(let i = 0; i < n; i++){
-    yellowIndices.value = [steps.value[i][0]];
-    redIndices.value = [steps.value[i][1]];
-    await sleep(animationSpeed.value);
-    if(steps.value[i][2] !== -1){
-      redIndices.value = [steps.value[i][1], steps.value[i][2]];
-      await sleep(animationSpeed.value);
-      [array.value[steps.value[i][0]], array.value[steps.value[i][1]]] = [array.value[steps.value[i][1]], array.value[steps.value[i][0]]];
-      await sleep(animationSpeed.value);
-      blueIndices.value.push(steps.value[i][2]);
-    }
-  }
-  yellowIndices.value = [];
-  redIndices.value = [];
-  blueIndices.value.push(0);
-
-  await sleep(1500);
-
-  resetState();
+  await processBubbleSteps();
 };
 
 // --- 生命周期钩子 (Lifecycle Hooks) ---
