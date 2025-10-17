@@ -19,9 +19,13 @@
         <span v-if="isLoading">加载中...</span>
         <span v-else>获取随机数组</span>
       </button>
-      <button @click="startBubbleSort" :disabled="isSorting || array.length === 0">开始冒泡排序</button>
-      <button @click="startSimpleSelectSort" :disabled="isSorting || array.length === 0">开始简单选择排序</button>
+      <button @click="startBubbleSort" :disabled="isSorting || array.length === 0">冒泡排序</button>
       
+      <button @click="startSimpleSelectSort" :disabled="isSorting || array.length === 0">简单选择排序</button>
+      
+      <button @click="insertionSort" :disabled="isSorting || array.length === 0">直接插入排序</button>
+
+      <button @click="quickSort" :disabled="isSorting || array.length === 0">快速排序</button>
 
       <div class="control-group">
         <label for="speed-slider">动画速度</label>
@@ -29,7 +33,7 @@
           id="speed-slider"
           type="range"
           min="10"
-          max="500"
+          max="1000"
           step="10"
           v-model.number="animationSpeed"
         />
@@ -40,7 +44,7 @@
     <div v-if="fetchError" class="error-message">
       {{ fetchError }}
     </div>
-
+    
     <div class="array-container">
       <div
         v-for="(num, index) in array"
@@ -67,7 +71,7 @@ import axios from 'axios';
 // --- 响应式状态 ---
 const array = ref([]);
 const arrayCount = ref(10); // 改为 ref，使其可动态修改
-const animationSpeed = ref(250);
+const animationSpeed = ref(500);
 const isSorting = ref(false);
 const isLoading = ref(false); // 新增：加载状态
 const fetchError = ref(null); // 新增：错误信息
@@ -80,7 +84,8 @@ const barGap = 2; // 条形图之间的间隔
 // --- 排序过程中的状态 ---
 const yellowIndices = ref([]);
 const redIndices = ref([]);
-const blueIndices = ref([]);
+const greenIndices = ref([]);
+const purpleIndices = ref([]);
 
 // --- 计算属性 (Computed Properties) ---
 
@@ -105,26 +110,17 @@ const resetState = () => {
   fetchError.value = null;
   yellowIndices.value = [];
   redIndices.value = [];
-  blueIndices.value = [];
+  greenIndices.value = [];
+  purpleIndices.value = [];
 };
 
 // 根据索引获取条形图的颜色
 const getBarColor = (index) => {
-  if (redIndices.value.includes(index)) return '#e74c3c'; // 红色 - 交换
+  if (greenIndices.value.includes(index)) return '#2ecc71'; // 绿色 - 已排序
   if (yellowIndices.value.includes(index)) return '#f1c40f'; // 黄色 - 比较
-  if (blueIndices.value.includes(index)) return '#2ecc71'; // 绿色 - 已排序
+  if (redIndices.value.includes(index)) return '#e74c3c'; // 红色 - 交换
+  if (purpleIndices.value.includes(index)) return '#9b59b6'; // 紫色 - 特殊状态 
   return '#3498db'; // 蓝色 - 默认
-};
-
-// 生成随机数组
-const generateRandomArray = () => {
-  if (isSorting.value) return;
-  resetState();
-  const newArray = [];
-  for (let i = 0; i < arrayCount.value; i++) {
-    newArray.push(Math.floor(Math.random() * (maxValue - 20) + 20));
-  }
-  array.value = newArray;
 };
 
 // 从后端获取数组
@@ -148,7 +144,7 @@ const fetchArrayFromBackend = async () => {
 // 暂停函数
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// 处理后端返回的排序步骤（冒泡排序）
+// 处理后端返回的排序步骤
 const processBubbleSteps = async () => {
   const n = steps.value.length;
   for (let i = 0; i < n; i++) {
@@ -161,7 +157,7 @@ const processBubbleSteps = async () => {
         await sleep(animationSpeed.value);
         yellowIndices.value = [];
         break;
-      case 2:
+      case 2: // Swap
         redIndices.value = step.slice(1);
         await sleep(animationSpeed.value);
         [array.value[step[1]], array.value[step[2]]] = [array.value[step[2]], array.value[step[1]]];
@@ -172,7 +168,15 @@ const processBubbleSteps = async () => {
         redIndices.value = step.slice(1);
         break;
       case 4:
-        blueIndices.value.push(step[1]);
+        greenIndices.value.push(step[1]);
+        break;
+      case 5: // Purple
+        purpleIndices.value = step.slice(1);
+        await sleep(animationSpeed.value);
+        break;
+      case 6: // set
+        array.value[step[1]] = step[2];
+        await sleep(animationSpeed.value);
         break;
       default:
         break;
@@ -218,7 +222,44 @@ const startSimpleSelectSort = async () => {
   } finally {
     isLoading.value = false;
   }
+  await processBubbleSteps();
+};
 
+// 直接插入排序
+const insertionSort = async () => {
+  if (isSorting.value || array.value.length === 0) return;
+
+  isSorting.value = true;
+  fetchError.value = null; // 开始排序时清除错误信息
+  try {
+    // 使用 arrayCount.value 动态请求数组大小
+    const response = await axios.get(`/api/sort/InsertionSort`);
+    steps.value = response.data.steps;
+  } catch (error) {
+    console.error('从后端获取数组失败:', error);
+    fetchError.value = '无法从后端获取数据。请确保后端服务正在运行。';
+  } finally {
+    isLoading.value = false;
+  }
+  await processBubbleSteps();
+};
+
+// 快速排序
+const quickSort = async () => {
+  if (isSorting.value || array.value.length === 0) return;
+
+  isSorting.value = true;
+  fetchError.value = null; // 开始排序时清除错误信息
+  try {
+    // 使用 arrayCount.value 动态请求数组大小
+    const response = await axios.get(`/api/sort/QuickSort`);
+    steps.value = response.data.steps;
+  } catch (error) {
+    console.error('从后端获取数组失败:', error);
+    fetchError.value = '无法从后端获取数据。请确保后端服务正在运行。';
+  } finally {
+    isLoading.value = false;
+  }
   await processBubbleSteps();
 };
 
