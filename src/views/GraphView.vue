@@ -1,8 +1,8 @@
 <template>
   <div class="graph-visualizer">
     <div class="controls header-controls">
-      <button @click="generateRandomGraph" :disabled="isVisualizing" class="primary-btn">
-        🎲 生成随机图
+      <button @click="generateRandomGraph" :disabled="isVisualizing" class="primary-btn" title="在固定网格位置上生成随机图">
+        🎲 生成随机图 (网格布局)
       </button>
       <button @click="restoreDefaultGraph" :disabled="isVisualizing">
         ↩️ 恢复默认图
@@ -118,9 +118,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 
-// --- 初始数据定义 ---
+// --- 初始数据定义 (保持不变，它们正好位于我们即将定义的网格上) ---
 const initialNodes = [
   { id: 'A', x: 150, y: 300 },
   { id: 'B', x: 300, y: 150 },
@@ -142,7 +142,7 @@ const initialEdges = [
 // --- 响应式状态 ---
 const nodes = ref([...initialNodes]); 
 const edges = ref([...initialEdges]);
-const startNode = ref('A'); 
+const startNode = ref(nodes.value.length > 0 ? nodes.value[0].id : ''); 
 
 const animationDelay = ref(500);
 const isVisualizing = ref(false);
@@ -158,19 +158,16 @@ const svgWidth = ref(800);
 const svgHeight = ref(600);
 const nodeRadius = 20;
 
-// --- 可视化状态 (颜色高亮) ---
+// --- 可视化状态 ---
 const highlightedNodes = ref([]); 
 const visitedNodes = ref([]);     
 const queuedNodes = ref([]);      
 const highlightedEdges = ref([]); 
 
 // --- 基础工具方法 ---
-
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
 const getNodeById = (id) => nodes.value.find(node => node.id === id);
 
-// 清除算法运行产生的颜色状态
 const clearVisualizationState = () => {
   highlightedNodes.value = [];
   visitedNodes.value = [];
@@ -178,7 +175,6 @@ const clearVisualizationState = () => {
   highlightedEdges.value = [];
 };
 
-// 恢复默认图数据 (重命名自 resetGraph)
 const restoreDefaultGraph = () => {
     if (isVisualizing.value) return;
     clearVisualizationState();
@@ -187,51 +183,70 @@ const restoreDefaultGraph = () => {
     startNode.value = nodes.value.length > 0 ? nodes.value[0].id : '';
 }
 
-// --- 新增功能：生成随机图 ---
+// --- 核心修改：生成固定位置的随机图 ---
+
+// 1. 定义预设的网格位置池 (4列 x 3行 = 12个位置)
+const predefinedPositions = [
+    { x: 150, y: 150 }, { x: 300, y: 150 }, { x: 450, y: 150 }, { x: 600, y: 150 }, // 第一行
+    { x: 150, y: 300 }, { x: 300, y: 300 }, { x: 450, y: 300 }, { x: 600, y: 300 }, // 第二行
+    { x: 150, y: 450 }, { x: 300, y: 450 }, { x: 450, y: 450 }, { x: 600, y: 450 }, // 第三行
+];
+
+// 辅助函数：洗牌数组 (Fisher-Yates Shuffle)
+const shuffleArray = (array) => {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+};
+
 const generateRandomGraph = () => {
     if (isVisualizing.value) return;
     clearVisualizationState();
 
-    const margin = 60; // 边距，防止节点太靠边
-    // 1. 随机确定节点数量 (例如 5 到 12 个)
-    const numNodes = Math.floor(Math.random() * 8) + 5; 
+    // 2. 随机确定节点数量 (例如 5 到 10 个，不能超过位置池总量)
+    const maxNodes = Math.min(10, predefinedPositions.length);
+    const minNodes = 5;
+    const numNodes = Math.floor(Math.random() * (maxNodes - minNodes + 1)) + minNodes;
     
     const newNodes = [];
     const nodeIds = [];
 
-    // 2. 生成节点
+    // 3. 打乱位置池，选取前 numNodes 个位置
+    const selectedPositions = shuffleArray(predefinedPositions).slice(0, numNodes);
+
+    // 4. 生成节点，分配选中的固定位置
     for (let i = 0; i < numNodes; i++) {
-        // 使用 A, B, C... 作为 ID
-        const id = String.fromCharCode(65 + i); 
+        const id = String.fromCharCode(65 + i); // A, B, C...
         nodeIds.push(id);
         newNodes.push({
             id: id,
-            // 在安全范围内生成随机坐标
-            x: margin + Math.random() * (svgWidth.value - margin * 2),
-            y: margin + Math.random() * (svgHeight.value - margin * 2),
+            x: selectedPositions[i].x,
+            y: selectedPositions[i].y,
         });
     }
 
-    // 3. 生成边
+    // 5. 生成边 (这部分逻辑保持不变，依然是随机连接)
     const newEdges = [];
-    // 目标边数：节点数的 1.5 倍左右，确保图比较连通但又不会太密
-    const targetNumEdges = Math.floor(numNodes * 1.5); 
+    // 目标边数：大约节点数的 1.2 到 1.8 倍
+    const densityMultiplier = 1.2 + Math.random() * 0.6; 
+    const targetNumEdges = Math.floor(numNodes * densityMultiplier); 
+    
     let attempts = 0;
-    const maxAttempts = targetNumEdges * 5; // 防止死循环
+    const maxAttempts = targetNumEdges * 10; // 防止死循环
 
     while (newEdges.length < targetNumEdges && attempts < maxAttempts) {
         attempts++;
-        // 随机选取两个不同的节点索引
         const i = Math.floor(Math.random() * numNodes);
         let j = Math.floor(Math.random() * numNodes);
-        while (j === i) { // 确保不是同一个节点 (无自环)
-             j = Math.floor(Math.random() * numNodes);
-        }
+        while (j === i) j = Math.floor(Math.random() * numNodes); // 无自环
 
         const sourceId = nodeIds[i];
         const targetId = nodeIds[j];
 
-        // 检查边是否已存在 (无向图：A-B 和 B-A 视为相同)
+        // 无向图检查重复边
         const edgeExists = newEdges.some(e =>
             (e.source === sourceId && e.target === targetId) ||
             (e.source === targetId && e.target === sourceId)
@@ -239,19 +254,17 @@ const generateRandomGraph = () => {
 
         if (!edgeExists) {
             newEdges.push({
-                id: `e_${Date.now()}_${newEdges.length}`, // 生成唯一ID
+                id: `e_${Date.now()}_${newEdges.length}`,
                 source: sourceId,
                 target: targetId,
-                // 随机权重 1-10
-                weight: Math.floor(Math.random() * 10) + 1 
+                weight: Math.floor(Math.random() * 9) + 1 // 权重 1-9
             });
         }
     }
 
-    // 4. 更新状态
+    // 6. 更新状态
     nodes.value = newNodes;
     edges.value = newEdges;
-    // 默认选中第一个节点作为起始点
     startNode.value = nodes.value.length > 0 ? nodes.value[0].id : '';
 };
 
@@ -306,7 +319,6 @@ const runBFS = async () => {
   while (queue.length > 0) {
     const currentNodeId = queue.shift();
     queuedNodes.value = queuedNodes.value.filter(id => id !== currentNodeId);
-    
     highlightedNodes.value = [currentNodeId];
     await sleep(animationDelay.value);
 
@@ -315,7 +327,6 @@ const runBFS = async () => {
       if (!visitedNodes.value.includes(neighbor.target)) {
         highlightedEdges.value = [neighbor.id];
         await sleep(animationDelay.value / 2);
-
         visitedNodes.value.push(neighbor.target);
         queue.push(neighbor.target);
         queuedNodes.value.push(neighbor.target);
@@ -368,6 +379,7 @@ const addNode = () => {
   if (!id || nodes.value.some(node => node.id === id)) {
     alert(`节点 ID 无效或已存在！`); return;
   }
+  // 手动添加的节点仍然使用随机位置，以示区别，或者你可以让它们吸附到最近的空闲网格点（更复杂）
   const x = 50 + Math.random() * (svgWidth.value - 100);
   const y = 50 + Math.random() * (svgHeight.value - 100);
   nodes.value.push({ id, x, y });
@@ -392,6 +404,7 @@ const addEdge = () => {
 </script>
 
 <style scoped>
+/* 样式保持不变，省略以节省篇幅 ... */
 .graph-visualizer {
   display: flex;
   flex-direction: column;
@@ -401,15 +414,14 @@ const addEdge = () => {
   color: #2c3e50;
 }
 
-/* 新增：顶部控制栏 */
 .header-controls {
     margin-bottom: 15px;
     padding: 10px 20px;
     background-color: #f8f9fa;
     border: 1px solid #e9ecef;
+    border-radius: 8px; /* 加个圆角 */
 }
 
-/* 主控制栏 */
 .controls {
   margin-bottom: 20px;
   display: flex;
@@ -435,7 +447,6 @@ const addEdge = () => {
     padding-left: 12px;
 }
 
-/* 输入框和下拉框样式优化 */
 input, select {
     padding: 6px 8px;
     border: 1px solid #ddd;
@@ -443,7 +454,6 @@ input, select {
     font-size: 13px;
 }
 
-/* 按钮统一样式 */
 button {
   padding: 7px 14px;
   font-size: 13px;
@@ -469,20 +479,17 @@ button:disabled {
   transform: none;
 }
 
-/* 不同类型的按钮颜色 */
-.primary-btn { background-color: #8e44ad; } /* 紫色 */
+.primary-btn { background-color: #8e44ad; } 
 .primary-btn:hover:not(:disabled) { background-color: #9b59b6; }
 
-.algo-btn { background-color: #27ae60; min-width: 100px; } /* 绿色 */
+.algo-btn { background-color: #27ae60; min-width: 100px; } 
 .algo-btn:hover:not(:disabled) { background-color: #2ecc71; }
 
 .small-btn { padding: 6px 10px; font-size: 12px;}
 
-/* 调整添加边区域的布局 */
 .add-edge-group select { width: 75px; }
 
 
-/* SVG 容器 */
 .visualization-container {
     background-color: #fcfcfc;
     border-radius: 12px;
@@ -491,7 +498,6 @@ button:disabled {
     overflow: hidden;
 }
 
-/* SVG 元素样式 (保持不变) */
 .edge-labels text {
   font-size: 12px;
   font-weight: bold;
