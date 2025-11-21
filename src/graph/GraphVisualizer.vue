@@ -2,68 +2,74 @@
   <div class="graph-visualizer">
     <div class="controls header-controls">
       <button @click="generateRandomGraph" :disabled="isVisualizing" class="primary-btn" title="在固定网格位置上生成随机图">
-        🎲 生成随机图 (网格布局)
+        生成随机图
       </button>
       <button @click="restoreDefaultGraph" :disabled="isVisualizing">
-        ↩️ 恢复默认图
+        恢复默认图
       </button>
     </div>
 
     <div class="main-content">
-      
       <div class="left-panel">
         <div class="controls main-controls">
-          <div class="control-group">
-            <input id="new-node-id" v-model="newNodeId" placeholder="新ID(如G)" :disabled="isVisualizing" style="width: 60px;"/>
-            <button @click="handleAddNode" :disabled="isVisualizing || !newNodeId.trim()" class="small-btn">添加节点</button>
-          </div>
+            <div class="control-row">
+              <div class="control-group">
+                <input id="new-node-id" v-model="newNodeId" placeholder="新ID(如G)" :disabled="isVisualizing" style="width: 60px;"/>
+                <button @click="handleAddNode" :disabled="isVisualizing || !newNodeId.trim()" class="small-btn">添加节点</button>
+              </div>
 
-          <div class="control-group border-left add-edge-group">
-            <select v-model="sourceNodeInput" :disabled="isVisualizing || nodes.length === 0">
-              <option value="">起点</option>
-              <option v-for="node in nodes" :key="'src-'+node.id" :value="node.id">{{ node.id }}</option>
-            </select>
-            <span>→</span>
-            <select v-model="targetNodeInput" :disabled="isVisualizing || nodes.length === 0">
-              <option value="">终点</option>
-              <option v-for="node in nodes" :key="'tgt-'+node.id" :value="node.id">{{ node.id }}</option>
-            </select>
-            
-            <input id="edge-weight" type="number" v-model.number="edgeWeightInput" min="1" placeholder="权重" :disabled="isVisualizing" style="width: 40px;" />
-            
-            <button @click="handleAddEdge" :disabled="isVisualizing || !sourceNodeInput || !targetNodeInput || sourceNodeInput === targetNodeInput" class="small-btn">
-              添加边
-            </button>
-          </div>
+              <div class="control-group add-edge-group">
+                <select v-model="sourceNodeInput" :disabled="isVisualizing || nodes.length === 0">
+                  <option value="">起点</option>
+                  <option v-for="node in nodes" :key="'src-'+node.id" :value="node.id">{{ node.id }}</option>
+                </select>
+                <span>→</span>
+                <select v-model="targetNodeInput" :disabled="isVisualizing || nodes.length === 0">
+                  <option value="">终点</option>
+                  <option v-for="node in nodes" :key="'tgt-'+node.id" :value="node.id">{{ node.id }}</option>
+                </select>
+                
+                <input id="edge-weight" type="number" v-model.number="edgeWeightInput" min="1" placeholder="权重" :disabled="isVisualizing" style="width: 40px;" />
+                
+                <button @click="handleAddEdge" :disabled="isVisualizing || !sourceNodeInput || !targetNodeInput || sourceNodeInput === targetNodeInput" class="small-btn">
+                  添加边
+                </button>
+              </div>
+            </div>
 
-          <div class="control-group border-left">
-            <label for="start-node">起始点:</label>
-            <select v-model="startNode" :disabled="isVisualizing" style="width: 50px;">
-              <option v-for="node in nodes" :key="node.id" :value="node.id">
-                {{ node.id }}
-              </option>
-            </select>
-          </div>
+            <div class="control-row">
+              <div class="control-group">
+                <label for="start-node">起始点:</label>
+                <select v-model="startNode" :disabled="isVisualizing" style="width: 60px;">
+                  <option v-for="node in nodes" :key="node.id" :value="node.id">
+                    {{ node.id }}
+                  </option>
+                </select>
+              </div>
 
-          <button @click="runBFS" :disabled="isVisualizing || !startNode" class="algo-btn">
-            广度优先 (BFS)
-          </button>
-          <button @click="runDFS" :disabled="isVisualizing || !startNode" class="algo-btn">
-            深度优先 (DFS)
-          </button>
+              <button @click="runBFS" :disabled="isVisualizing || !startNode" class="algo-btn">
+                广度优先 (BFS)
+              </button>
+              <button @click="runDFS" :disabled="isVisualizing || !startNode" class="algo-btn">
+                深度优先 (DFS)
+              </button>
+            </div>
 
-          <div class="control-group border-left">
-            <input
-              id="speed-slider"
-              type="range"
-              min="100"
-              max="1500"
-              step="100"
-              v-model.number="animationDelay"
-              title="调整动画速度"
-            />
-            <span style="font-size: 12px; width: 30px;">{{ animationDelay }}ms</span>
-          </div>
+            <div class="control-row">
+              <div class="control-group">
+                <label for="speed-slider">速度:</label> 
+                <input
+                  id="speed-slider"
+                  type="range"
+                  min="100"
+                  max="1500"
+                  step="100"
+                  v-model.number="animationDelay"
+                  title="调整动画速度"
+                />
+                <span style="font-size: 12px; width: 35px;">{{ animationDelay }}ms</span>
+              </div>
+            </div>
         </div>
 
         <div class="visualization-container">
@@ -215,6 +221,9 @@ const handleAddEdge = () => {
 }
 
 .header-controls {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
     margin-bottom: 15px;
     padding: 10px 20px;
     background-color: #f8f9fa;
@@ -235,6 +244,7 @@ const handleAddEdge = () => {
   flex: 2;
   display: flex;
   flex-direction: column;
+  gap: 15px;
 }
 
 .right-panel {
@@ -246,16 +256,25 @@ const handleAddEdge = () => {
 }
 
 .main-controls {
-  margin-bottom: 15px;
+  /* margin-bottom 等原有样式保留 */
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 15px;
+  flex-direction: column; /* 关键：改为垂直方向 */
+  gap: 10px; /* 行与行之间的间距 */
+  align-items: center; /* 让每一行在容器中居中对齐 */
+  padding: 20px; /* 稍微增加点内边距 */
   background-color: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* 新增：每一行的容器样式 */
+.control-row {
+  display: flex; /* 行内部依然是水平 Flex */
+  flex-wrap: wrap; /* 允许小屏幕下换行 */
+  gap: 15px; /* 行内元素之间的间距 */
+  align-items: center;
+  justify-content: center; /* 行内元素居中 */
+  width: 100%; /* 占满整行宽度 */
 }
 
 /* --- 通用控件样式 (保留) --- */
@@ -268,7 +287,7 @@ const handleAddEdge = () => {
 
 .border-left {
     border-left: 1px solid #eee;
-    padding-left: 8px;
+    padding-left: 15px; /* 增加一点左侧间距 */
 }
 
 input, select {
