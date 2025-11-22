@@ -275,7 +275,7 @@ export function useSorting() {
           break;
 
         case 'help':
-          commandOutput.value = '指令: gen [数量], run [算法], speed [ms]';
+          commandOutput.value = '指令: gen [数量], run [算法], add [元素], speed [ms]';
           break;
 
         default:
