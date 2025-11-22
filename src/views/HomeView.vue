@@ -51,9 +51,13 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
+import { onMounted } from 'vue';
 
 const router = useRouter();
 
+onMounted(() => {
+  document.title = "数据结构与算法可视化演示平台";
+});
 const navigateTo = (path) => {
   router.push(path);
 };
