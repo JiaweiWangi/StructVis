@@ -6,7 +6,7 @@
       :isSorting="isSorting"
       :arrayLength="array.length"
       @generate="generateRandomArray"
-      @startSort="handleStartSort"
+      @startSort="triggerSort"
     />
 
     <SortBars
@@ -22,7 +22,7 @@
       :outputMessage="commandOutput"
       :isError="isCommandError"
       placeholder="输入指令，例如: gen 20 或 run bubble"
-      @command="handleCommand"
+      @command="executeCommand"
     />
   </div>
 
@@ -49,21 +49,11 @@ const {
   containerWidth,
   getBarColor,
   generateRandomArray,
-  runBubbleSort,
-  runSelectionSort,
-  runInsertionSort,
-  runQuickSort,
+  commandOutput,   // 绑定给 CommandBar 显示消息
+  isCommandError,  // 绑定给 CommandBar 显示红色错误
+  executeCommand,  // 绑定给 CommandBar 处理回车事件
+  triggerSort      // 绑定给 Controls 按钮点击
 } = useSorting();
-
-// 处理来自控件子组件的排序请求
-const handleStartSort = (algorithmType) => {
-    switch (algorithmType) {
-        case 'bubble': runBubbleSort(); break;
-        case 'selection': runSelectionSort(); break;
-        case 'insertion': runInsertionSort(); break;
-        case 'quick': runQuickSort(); break;
-    }
-}
 
 // 生命周期
 onMounted(() => {
