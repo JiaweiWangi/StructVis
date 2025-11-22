@@ -57,6 +57,7 @@ const {
 
 // 生命周期
 onMounted(() => {
+  document.title = '排序算法可视化器';
   generateRandomArray();
 });
 </script>

@@ -127,11 +127,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 // 1. 引入我们编写的 Composable
 import { useGraph } from './useGraph.js';
 // 2. 引入子组件
 import GraphDataViews from './GraphDataViews.vue';
+
+onMounted(() => {
+  document.title = '图算法可视化器';
+});
 
 // --- 使用 Composable ---
 // 调用 useGraph()，解构出我们需要的所有数据和方法
