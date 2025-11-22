@@ -58,6 +58,7 @@ export function useSorting() {
     return '#3498db';
   };
 
+  // --- 生成随机数组 ---
   const generateRandomArray = () => {
     if (isSorting.value) return;
     resetState();
@@ -217,7 +218,7 @@ export function useSorting() {
       throw new Error('添加的值必须是数字');
     }
     const newItem = {
-      id: arrayCount.value, 
+      id: arrayCount.value,
       value: value
     };
     array.value.push(newItem);
@@ -225,6 +226,7 @@ export function useSorting() {
     resetState();
   }
 
+  // DSL 命令行解析与执行
   const executeCommand = (cmdString) => {
     // 1. 重置状态
     isCommandError.value = false;
@@ -244,18 +246,32 @@ export function useSorting() {
         case 'gen':
         case 'generate':
         case 'new':
-          let count = parseInt(param);
-          if(isNaN(count)){
-            count = 10; // 默认值
+          const args = parts.slice(1);
+          if (args.length > 1) {
+            const customList = args.map(n => parseInt(n));
+            if (customList.some(n => isNaN(n))) {
+              throw new Error('参数包含非数字，请输入纯数字列表');
+            }
+            array.value = [];
+            for (let i = 0; i < customList.length; i++) {
+              addElement(customList[i]);
+            }
+            arrayCount.value = customList.length;
+            commandOutput.value = `已生成自定义数据: [${customList.join(', ')}]`;
           }
-          if ( count < 5 || count > 100) {
-            throw new Error('请输入 5 到 100 之间的数字');
+          else {
+            let count = parseInt(param);
+            if (isNaN(count)) {
+              count = 20; // 默认值
+            }
+            if (count < 0 || count > 100) {
+              throw new Error('请输入 0 到 100 之间的数字');
+            }
+            arrayCount.value = count; // 直接修改内部状态
+            generateRandomArray();    // 直接调用内部函数
+            commandOutput.value = `已生成 ${count} 个随机数据`;
           }
-          arrayCount.value = count; // 直接修改内部状态
-          generateRandomArray();    // 直接调用内部函数
-          commandOutput.value = `已生成 ${count} 个随机数据`;
           break;
-
         case 'run':
         case 'sort':
           if (!param) throw new Error('请指定算法 (例如: run bubble)');
@@ -297,7 +313,7 @@ export function useSorting() {
     isSorting,
 
     // dsl
-    commandOutput, 
+    commandOutput,
     isCommandError,
 
     // 计算属性

@@ -18,10 +18,10 @@
       生成随机数组
     </button>
 
-    <button @click="$emit('startSort', 'bubble')" :disabled="isSorting || arrayLength === 0">冒泡排序</button>
-    <button @click="$emit('startSort', 'selection')" :disabled="isSorting || arrayLength === 0">简单选择排序</button>
-    <button @click="$emit('startSort', 'insertion')" :disabled="isSorting || arrayLength === 0">直接插入排序</button>
-    <button @click="$emit('startSort', 'quick')" :disabled="isSorting || arrayLength === 0">快速排序</button>
+    <button @click="$emit('startSort', 'bubble')" :disabled="isSorting || arrayLength === 0">Bubble Sort</button>
+    <button @click="$emit('startSort', 'selection')" :disabled="isSorting || arrayLength === 0">Selection Sort</button>
+    <button @click="$emit('startSort', 'insertion')" :disabled="isSorting || arrayLength === 0">Insertion Sort</button>
+    <button @click="$emit('startSort', 'quick')" :disabled="isSorting || arrayLength === 0">Quick Sort</button>
 
     <div class="control-group">
       <label for="speed-slider">动画延迟(ms)</label>
