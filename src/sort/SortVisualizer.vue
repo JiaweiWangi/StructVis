@@ -21,7 +21,7 @@
       :disabled="isSorting"
       :outputMessage="commandOutput"
       :isError="isCommandError"
-      placeholder="输入指令，例如: gen 20 或 run bubble"
+      placeholder="输入指令，例如: gen 20 或 run bubble，按下回车执行"
       @command="executeCommand"
     />
   </div>

@@ -1,6 +1,13 @@
 # StructVisFrontend
 
-This template should help get you started developing with Vue 3 in Vite.
+> 一个基于 Vue 3 + Vite 的算法可视化演示平台。(未完成)
+
+🚀 **在线演示**: [点击访问 Live Demo](https://jiaweiwangi.github.io/StructVis/)
+
+### ✨ 功能特性
+- **排序算法**: 支持冒泡、选择、插入、快速排序的可视化对比。
+- **图论算法**: 支持 BFS/DFS 动态遍历演示。
+- **命令行交互**: 独创的 DSL 指令系统 (e.g., `run bubble`, `gen 50`)。
 
 ## Recommended IDE Setup
 

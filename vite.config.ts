@@ -6,11 +6,12 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 import { trace } from 'node:console'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     vue(),
     vueDevTools(),
   ],
+  base: mode === 'production' ? '/StructVis/' : '/',
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
@@ -25,4 +26,4 @@ export default defineConfig({
       }
     },
   }
-})
+}))
