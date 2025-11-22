@@ -44,3 +44,7 @@ npm run build
 ```sh
 npm run lint
 ```
+
+## 📄 License
+
+[MIT](LICENSE) © 2025 Jiawei Wang
