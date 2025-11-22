@@ -1,131 +1,129 @@
 <template>
   <div class="graph-visualizer">
-    <div class="controls header-controls">
-      <button @click="generateRandomGraph" :disabled="isVisualizing" class="primary-btn" title="在固定网格位置上生成随机图">
-        生成随机图
-      </button>
-      <button @click="restoreDefaultGraph" :disabled="isVisualizing">
-        恢复默认图
-      </button>
-    </div>
-
     <div class="main-content">
       <div class="left-panel">
-        <div class="controls main-controls">
-            <div class="control-row">
-              <div class="control-group">
-                <input id="new-node-id" v-model="newNodeId" placeholder="新ID(如G)" :disabled="isVisualizing" style="width: 60px;"/>
-                <button @click="handleAddNode" :disabled="isVisualizing || !newNodeId.trim()" class="small-btn">添加节点</button>
-              </div>
 
-              <div class="control-group add-edge-group">
-                <select v-model="sourceNodeInput" :disabled="isVisualizing || nodes.length === 0">
-                  <option value="">起点</option>
-                  <option v-for="node in nodes" :key="'src-'+node.id" :value="node.id">{{ node.id }}</option>
-                </select>
-                <span>→</span>
-                <select v-model="targetNodeInput" :disabled="isVisualizing || nodes.length === 0">
-                  <option value="">终点</option>
-                  <option v-for="node in nodes" :key="'tgt-'+node.id" :value="node.id">{{ node.id }}</option>
-                </select>
-                
-                <input id="edge-weight" type="number" v-model.number="edgeWeightInput" min="1" placeholder="权重" :disabled="isVisualizing" style="width: 40px;" />
-                
-                <button @click="handleAddEdge" :disabled="isVisualizing || !sourceNodeInput || !targetNodeInput || sourceNodeInput === targetNodeInput" class="small-btn">
-                  添加边
-                </button>
-              </div>
-            </div>
-
-            <div class="control-row">
-              <div class="control-group">
-                <label for="start-node">起始点:</label>
-                <select v-model="startNode" :disabled="isVisualizing" style="width: 60px;">
-                  <option v-for="node in nodes" :key="node.id" :value="node.id">
-                    {{ node.id }}
-                  </option>
-                </select>
-              </div>
-
-              <button @click="runBFS" :disabled="isVisualizing || !startNode" class="algo-btn">
-                广度优先 (BFS)
-              </button>
-              <button @click="runDFS" :disabled="isVisualizing || !startNode" class="algo-btn">
-                深度优先 (DFS)
-              </button>
-            </div>
-
-            <div class="control-row">
-              <div class="control-group">
-                <label for="speed-slider">速度:</label> 
-                <input
-                  id="speed-slider"
-                  type="range"
-                  min="100"
-                  max="1500"
-                  step="100"
-                  v-model.number="animationDelay"
-                  title="调整动画速度"
-                />
-                <span style="font-size: 12px; width: 35px;">{{ animationDelay }}ms</span>
-              </div>
-            </div>
+        <!-- 生成随机图与恢复默认图 -->
+        <div class="controls header-controls">
+          <button @click="generateRandomGraph" :disabled="isVisualizing" class="primary-btn" title="在固定网格位置上生成随机图">
+            生成随机图
+          </button>
+          <button @click="restoreDefaultGraph" :disabled="isVisualizing">
+            恢复默认图
+          </button>
         </div>
 
+        <!-- 主控件区 -->
+        <div class="controls main-controls">
+          <div class="control-row">
+            <div class="control-group">
+              <input id="new-node-id" v-model="newNodeId" placeholder="新ID(如G)" :disabled="isVisualizing"
+                style="width: 60px;" />
+              <button @click="handleAddNode" :disabled="isVisualizing || !newNodeId.trim()"
+                class="small-btn">添加节点</button>
+            </div>
+
+            <div class="control-group add-edge-group">
+              <select v-model="sourceNodeInput" :disabled="isVisualizing || nodes.length === 0">
+                <option value="">起点</option>
+                <option v-for="node in nodes" :key="'src-' + node.id" :value="node.id">{{ node.id }}</option>
+              </select>
+              <span>→</span>
+              <select v-model="targetNodeInput" :disabled="isVisualizing || nodes.length === 0">
+                <option value="">终点</option>
+                <option v-for="node in nodes" :key="'tgt-' + node.id" :value="node.id">{{ node.id }}</option>
+              </select>
+
+              <input id="edge-weight" type="number" v-model.number="edgeWeightInput" min="1" placeholder="权重"
+                :disabled="isVisualizing" style="width: 40px;" />
+
+              <button @click="handleAddEdge"
+                :disabled="isVisualizing || !sourceNodeInput || !targetNodeInput || sourceNodeInput === targetNodeInput"
+                class="small-btn">
+                添加边
+              </button>
+            </div>
+          </div>
+
+          <div class="control-row">
+            <div class="control-group">
+              <label for="start-node">起始点:</label>
+              <select v-model="startNode" :disabled="isVisualizing" style="width: 60px;">
+                <option v-for="node in nodes" :key="node.id" :value="node.id">
+                  {{ node.id }}
+                </option>
+              </select>
+            </div>
+
+            <button @click="runBFS" :disabled="isVisualizing || !startNode" class="algo-btn">
+              广度优先 (BFS)
+            </button>
+            <button @click="runDFS" :disabled="isVisualizing || !startNode" class="algo-btn">
+              深度优先 (DFS)
+            </button>
+          </div>
+
+          <div class="control-row">
+            <div class="control-group">
+              <label for="speed-slider">速度:</label>
+              <input id="speed-slider" type="range" min="100" max="1500" step="100" v-model.number="animationDelay"
+                title="调整动画速度" />
+              <span style="font-size: 12px; width: 35px;">{{ animationDelay }}ms</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 数据可视化展示区 -->
         <div class="visualization-container">
           <svg :width="svgWidth" :height="svgHeight">
             <g class="edges">
-              <line
-                v-for="edge in edges"
-                :key="edge.id"
-                :x1="getNodeById(edge.source)?.x"
-                :y1="getNodeById(edge.source)?.y"
-                :x2="getNodeById(edge.target)?.x"
-                :y2="getNodeById(edge.target)?.y"
-                :stroke="getEdgeColor(edge.id)"
-                :stroke-width="getEdgeWidth(edge.id)"
-              />
+              <line v-for="edge in edges" :key="edge.id" :x1="getNodeById(edge.source)?.x"
+                :y1="getNodeById(edge.source)?.y" :x2="getNodeById(edge.target)?.x" :y2="getNodeById(edge.target)?.y"
+                :stroke="getEdgeColor(edge.id)" :stroke-width="getEdgeWidth(edge.id)" />
             </g>
             <g class="edge-labels">
               <g v-for="edge in edges" :key="edge.id + '-label'">
-                <text
-                  v-if="edge.weight !== undefined && getNodeById(edge.source) && getNodeById(edge.target)"
+                <text v-if="edge.weight !== undefined && getNodeById(edge.source) && getNodeById(edge.target)"
                   :x="(getNodeById(edge.source).x + getNodeById(edge.target).x) / 2"
-                  :y="(getNodeById(edge.source).y + getNodeById(edge.target).y) / 2"
-                  text-anchor="middle"
-                  dy="-5"
-                >
+                  :y="(getNodeById(edge.source).y + getNodeById(edge.target).y) / 2" text-anchor="middle" dy="-5">
                   {{ edge.weight }}
                 </text>
-            </g>
+              </g>
             </g>
             <g class="nodes">
               <g v-for="node in nodes" :key="node.id" :transform="`translate(${node.x}, ${node.y})`" class="node-group">
-                <circle
-                  :r="nodeRadius"
-                  :fill="getNodeColor(node.id)"
-                  :stroke="getNodeStroke(node.id)"
-                  stroke-width="2"
-                />
-                <text
-                  fill="#fff"
-                  text-anchor="middle"
-                  dy=".3em"
-                  font-weight="bold"
-                  font-size="14px"
-                  pointer-events="none" 
-                >
+                <circle :r="nodeRadius" :fill="getNodeColor(node.id)" :stroke="getNodeStroke(node.id)"
+                  stroke-width="2" />
+                <text fill="#fff" text-anchor="middle" dy=".3em" font-weight="bold" font-size="14px"
+                  pointer-events="none">
                   {{ node.id }}
                 </text>
               </g>
             </g>
           </svg>
         </div>
-      </div> <div class="right-panel">
+        
+        <!-- DSL 输入栏 -->
+        <div class="command-bar">
+          <div class="command-input-wrapper">
+            <span class="command-prompt">&gt;</span>
+            <input type="text" v-model="commandInput" @keyup.enter="executeCommand" :disabled="isVisualizing"
+              placeholder="输入指令，例如: add node G 或 add edge A B 5，然后按回车" class="command-input" />
+          </div>
+          <div v-if="commandOutput" class="command-output" :class="{ 'error': isCommandError }">
+            {{ commandOutput }}
+          </div>
+        </div>
+
+      </div>
+
+      <div class="right-panel">
         <GraphDataViews :nodes="nodes" :edges="edges" />
       </div>
 
-    </div> </div>
+
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -161,7 +159,7 @@ const edgeWeightInput = ref(1);
 
 // --- 布局常量 ---
 const svgWidth = ref(700);
-const svgHeight = ref(550);
+const svgHeight = ref(400);
 const nodeRadius = 20;
 
 // --- 辅助方法 (仅用于模板渲染) ---
@@ -172,7 +170,7 @@ const getNodeById = (id) => nodes.value.find(node => node.id === id);
 // --- UI 交互处理函数 ---
 // 这些函数处理表单输入，然后操作从 useGraph 导入的数据
 const handleAddNode = () => {
-  const id = newNodeId.value.trim().toUpperCase(); 
+  const id = newNodeId.value.trim().toUpperCase();
   if (!id || nodes.value.some(node => node.id === id)) {
     alert(`节点 ID 无效或已存在！`); return;
   }
@@ -186,7 +184,7 @@ const handleAddNode = () => {
 
 const handleAddEdge = () => {
   if (!sourceNodeInput.value || !targetNodeInput.value || sourceNodeInput.value === targetNodeInput.value) return;
-  const edgeExists = edges.value.some(edge => 
+  const edgeExists = edges.value.some(edge =>
     (edge.source === sourceNodeInput.value && edge.target === targetNodeInput.value) ||
     (edge.source === targetNodeInput.value && edge.target === sourceNodeInput.value)
   );
@@ -212,8 +210,8 @@ const handleAddEdge = () => {
 .graph-visualizer {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 20px;
+  /* align-items: center; */
+
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #2c3e50;
   max-width: 1200px;
@@ -221,16 +219,15 @@ const handleAddEdge = () => {
 }
 
 .header-controls {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin-bottom: 15px;
-    padding: 10px 20px;
-    background-color: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    width: 100%;
-    box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 10px 20px;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .main-content {
@@ -258,23 +255,32 @@ const handleAddEdge = () => {
 .main-controls {
   /* margin-bottom 等原有样式保留 */
   display: flex;
-  flex-direction: column; /* 关键：改为垂直方向 */
-  gap: 10px; /* 行与行之间的间距 */
-  align-items: center; /* 让每一行在容器中居中对齐 */
-  padding: 20px; /* 稍微增加点内边距 */
+  flex-direction: column;
+  /* 关键：改为垂直方向 */
+  gap: 10px;
+  /* 行与行之间的间距 */
+  align-items: center;
+  /* 让每一行在容器中居中对齐 */
+  padding: 20px;
+  /* 稍微增加点内边距 */
   background-color: #fff;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 /* 新增：每一行的容器样式 */
 .control-row {
-  display: flex; /* 行内部依然是水平 Flex */
-  flex-wrap: wrap; /* 允许小屏幕下换行 */
-  gap: 15px; /* 行内元素之间的间距 */
+  display: flex;
+  /* 行内部依然是水平 Flex */
+  flex-wrap: wrap;
+  /* 允许小屏幕下换行 */
+  gap: 15px;
+  /* 行内元素之间的间距 */
   align-items: center;
-  justify-content: center; /* 行内元素居中 */
-  width: 100%; /* 占满整行宽度 */
+  justify-content: center;
+  /* 行内元素居中 */
+  width: 100%;
+  /* 占满整行宽度 */
 }
 
 /* --- 通用控件样式 (保留) --- */
@@ -286,15 +292,17 @@ const handleAddEdge = () => {
 }
 
 .border-left {
-    border-left: 1px solid #eee;
-    padding-left: 15px; /* 增加一点左侧间距 */
+  border-left: 1px solid #eee;
+  padding-left: 15px;
+  /* 增加一点左侧间距 */
 }
 
-input, select {
-    padding: 5px 6px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 12px;
+input,
+select {
+  padding: 5px 6px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
 }
 
 button {
@@ -307,12 +315,12 @@ button {
   border: none;
   border-radius: 6px;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 button:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 button:disabled {
@@ -322,22 +330,39 @@ button:disabled {
   transform: none;
 }
 
-.primary-btn { background-color: #8e44ad; } 
-.primary-btn:hover:not(:disabled) { background-color: #9b59b6; }
+.primary-btn {
+  background-color: #8e44ad;
+}
 
-.algo-btn { background-color: #27ae60; min-width: 90px; } 
-.algo-btn:hover:not(:disabled) { background-color: #2ecc71; }
+.primary-btn:hover:not(:disabled) {
+  background-color: #9b59b6;
+}
 
-.small-btn { padding: 5px 8px; font-size: 11px;}
-.add-edge-group select { width: 65px; }
+.algo-btn {
+  background-color: #27ae60;
+  min-width: 90px;
+}
+
+.algo-btn:hover:not(:disabled) {
+  background-color: #2ecc71;
+}
+
+.small-btn {
+  padding: 5px 8px;
+  font-size: 11px;
+}
+
+.add-edge-group select {
+  width: 65px;
+}
 
 /* SVG 样式 (保留) */
 .visualization-container {
-    background-color: #fcfcfc;
-    border-radius: 12px;
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.03);
-    border: 1px solid #eee;
-    overflow: hidden;
+  background-color: #fcfcfc;
+  border-radius: 12px;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid #eee;
+  overflow: hidden;
 }
 
 .edge-labels text {
@@ -350,9 +375,99 @@ button:disabled {
   pointer-events: none;
 }
 
-.nodes circle { cursor: pointer; }
-.nodes circle, .edges line {
+.nodes circle {
+  cursor: pointer;
+}
+
+.nodes circle,
+.edges line {
   transition: fill 0.4s ease, stroke 0.4s ease, stroke-width 0.4s ease, r 0.4s ease;
 }
-.node-group:hover circle { r: 23; stroke-width: 3; }
+
+.node-group:hover circle {
+  r: 23;
+  stroke-width: 3;
+}
+
+.command-bar {
+  width: 100%;
+  /* 改为白色背景，与上方控件区一致 */
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 15px;
+  /* 使用一致的柔和阴影 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  color: #333;
+  /* 保留等宽字体以便于阅读代码和对齐，但颜色不再是刺眼的高亮色 */
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  border: 1px solid #eee;
+}
+
+.command-input-wrapper {
+  display: flex;
+  align-items: center;
+  /* 输入框背景改为非常浅的灰色，以区分外部容器 */
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  padding: 8px 12px;
+  /* 使用标准的浅灰色边框 */
+  border: 1px solid #ddd;
+  transition: border-color 0.3s ease;
+}
+
+/* 输入框聚焦时的效果，增加一点交互感 */
+.command-input-wrapper:focus-within {
+  border-color: #3498db;
+}
+
+.command-prompt {
+  /* 提示符改为低调的灰色 */
+  color: #999;
+  margin-right: 12px;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.command-input {
+  flex: 1;
+  background: none;
+  border: none;
+  /* 文字颜色跟随父元素 */
+  color: inherit;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  padding: 0;
+}
+
+.command-input::placeholder {
+  color: #bbb;
+}
+
+.command-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* 输出区域样式 */
+.command-output {
+  margin-top: 12px;
+  padding: 10px 15px;
+  font-size: 13px;
+  /* 成功/普通信息使用非常浅的蓝色背景 */
+  background-color: #f0f7fd;
+  color: #333;
+  /* 左侧边框使用主题蓝色 */
+  border-left: 4px solid #3498db;
+  border-radius: 4px;
+}
+
+/* 错误信息样式 */
+.command-output.error {
+  /* 错误信息使用非常浅的红色背景 */
+  background-color: #fff5f5;
+  color: #c0392b;
+  /* 左侧边框使用红色 */
+  border-left-color: #e74c3c;
+}
 </style>

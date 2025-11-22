@@ -60,7 +60,6 @@ defineEmits([
 <style scoped>
 /* 将原文件中与控制栏相关的样式剪切到这里 */
 .controls {
-  margin-bottom: 30px;
   display: flex;
   flex-wrap: wrap;
   gap: 15px;

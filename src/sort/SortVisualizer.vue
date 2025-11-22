@@ -16,7 +16,18 @@
       :containerWidth="containerWidth"
       :getBarColor="getBarColor"
     />
+
+    <CommandBar
+      :disabled="isSorting"
+      :outputMessage="commandOutput"
+      :isError="isCommandError"
+      placeholder="输入指令，例如: gen 20 或 run bubble"
+      @command="handleCommand"
+    />
   </div>
+
+
+  
 </template>
 
 <script setup>
@@ -26,6 +37,7 @@ import { useSorting } from './useSorting.js'; // 假设放在同一目录
 // 2. 引入 UI 子组件
 import SortControls from './SortControls.vue';
 import SortBars from './SortBars.vue';
+import CommandBar from './CommandBar.vue';
 
 // 3. 调用 Composable 获取数据和方法
 const {

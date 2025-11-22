@@ -40,6 +40,8 @@ defineProps({
   box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
   display: flex;
   justify-content: center;
+  margin-top: 30px;
+  margin-bottom: 30px;
 }
 
 .array-wrapper {
