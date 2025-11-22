@@ -102,7 +102,7 @@
             </g>
           </svg>
         </div>
-        
+
         <!-- DSL 输入栏 -->
         <div class="command-bar">
           <div class="command-input-wrapper">
@@ -121,8 +121,9 @@
         <GraphDataViews :nodes="nodes" :edges="edges" />
       </div>
 
-
     </div>
+    <AIChatWindow :context="'图算法'" />
+
   </div>
 </template>
 
@@ -132,6 +133,7 @@ import { onMounted, ref } from 'vue';
 import { useGraph } from './useGraph.js';
 // 2. 引入子组件
 import GraphDataViews from './GraphDataViews.vue';
+import AIChatWindow from '../chat/AIChatWindow.vue';
 
 onMounted(() => {
   document.title = '图算法可视化器';

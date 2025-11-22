@@ -26,7 +26,9 @@
     />
   </div>
 
-
+  <AIChatWindow
+  :context="'排序算法'"
+  />
   
 </template>
 
@@ -38,6 +40,7 @@ import { useSorting } from './useSorting.js'; // 假设放在同一目录
 import SortControls from './SortControls.vue';
 import SortBars from './SortBars.vue';
 import CommandBar from './CommandBar.vue';
+import AIChatWindow from '../chat/AIChatWindow.vue';
 
 // 3. 调用 Composable 获取数据和方法
 const {
