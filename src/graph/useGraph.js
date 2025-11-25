@@ -57,6 +57,57 @@ export function useGraph() {
     startNode.value = nodes.value.length > 0 ? nodes.value[0].id : '';
   };
 
+  // --- 新增：添加节点的纯逻辑 ---
+  // 返回 true 表示成功，false 表示失败（比如ID重复）
+  const addNode = (id, maxWidth, maxHeight) => {
+    const finalId = id.trim().toUpperCase();
+    
+    // 1. 校验空值
+    if (!finalId) return { success: false, message: 'ID 不能为空' };
+    
+    // 2. 校验重复
+    if (nodes.value.some(n => n.id === finalId)) {
+      return { success: false, message: '节点 ID 已存在' };
+    }
+
+    // 3. 计算坐标
+    const x = 50 + Math.random() * (maxWidth - 100);
+    const y = 50 + Math.random() * (maxHeight - 100);
+
+    // 4. 添加数据
+    nodes.value.push({ id: finalId, x, y });
+
+    // 5. 如果是第一个节点，自动设为起点
+    if (nodes.value.length === 1) {
+      startNode.value = finalId;
+    }
+
+    return { success: true };
+  };
+
+  // --- 新增：添加边的纯逻辑 ---
+  const addEdge = (source, target, weight) => {
+    // 1. 校验自身环
+    if (source === target) return { success: false, message: '起点和终点不能相同' };
+
+    // 2. 校验边是否存在 (无向图逻辑：A->B 和 B->A 视为同一条边)
+    const exists = edges.value.some(e => 
+      (e.source === source && e.target === target) ||
+      (e.source === target && e.target === source)
+    );
+
+    if (exists) return { success: false, message: '边已存在' };
+
+    // 3. 添加数据
+    edges.value.push({
+      id: `e_${Date.now()}`, // 生成唯一ID
+      source,
+      target,
+      weight: Number(weight) || 1
+    });
+
+    return { success: true };
+  };
   // --- 辅助函数：洗牌和构建邻接表 ---
   const shuffleArray = (array) => {
       const newArray = [...array];
@@ -234,6 +285,10 @@ export function useGraph() {
     nodes,
     edges,
     startNode,
+    
+    addNode, 
+    addEdge,
+
     animationDelay,
     isVisualizing,
     // 可视化状态 ref (虽然不直接修改，但 SVG 需要读取它们)

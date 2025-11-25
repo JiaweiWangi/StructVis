@@ -93,7 +93,7 @@ export function useSorting() {
   };
 
 
-  // --- 排序算法实现 (全部移到这里) ---
+  // --- 排序算法实现 ---
 
   // 通用包装器
   const runSortAlgorithm = async (algorithmFn) => {

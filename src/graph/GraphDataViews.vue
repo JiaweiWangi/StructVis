@@ -61,7 +61,7 @@ const props = defineProps({
   }
 });
 
-// --- 计算属性 (基于 props 计算) ---
+// --- 计算属性 ---
 
 // 1. 计算邻接矩阵
 const computedMatrix = computed(() => {
