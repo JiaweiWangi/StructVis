@@ -77,29 +77,17 @@ const {
   getNodeColor,
   getNodeStroke,
   getEdgeColor,
-  getEdgeWidth
+  getEdgeWidth,
+  commandOutput,   // 绑定给 CommandBar 显示消息
+  isCommandError,  // 绑定给 CommandBar 显示红色错误
+  executeCommand,  // 绑定给 CommandBar 处理回车事件
 } = useGraph();
 
 // --- 布局常量 ---
 const svgWidth = ref(700);
 const svgHeight = ref(400);
 
-// --- 命令行相关逻辑 (保留在父组件，因为需要操作 useGraph 的数据) ---
-const commandInput = ref('');
-const commandOutput = ref('');
-const isCommandError = ref(false);
-
-const executeCommand = (cmd) => {
-  // 注意：这里为了简化，保留了原本 CommandBar 的部分逻辑在父组件处理，
-  // 实际上你可以把 parseCommand 的逻辑也移入 useGraph，但这里暂时维持原样。
-  // ... 此处应复制原文件中 executeCommand 的具体实现逻辑 ...
-  // 这里做一个简单的示例连接：
-  commandOutput.value = `执行命令: ${cmd} (逻辑需在父组件补全)`;
-};
-
-
 // --- 处理来自子组件的事件 ---
-// 现在的处理函数变得非常简单，只负责处理 UI 反馈 (alert)
 const handleAddNode = (id) => {
   // 调用 JS 里的逻辑，传入 ID 和 画布宽高
   const result = addNode(id, svgWidth.value, svgHeight.value);
