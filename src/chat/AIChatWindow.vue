@@ -71,28 +71,108 @@ const toggleChat = () => {
   isOpen.value = !isOpen.value;
 };
 
-const sendMessage = () => {
+const sendMessage = async () => {
   const text = inputContent.value.trim();
   if (!text) return;
 
-  // 用户消息
+  // UI 更新
   messages.value.push({ role: 'user', content: text });
   inputContent.value = '';
   scrollToBottom();
 
-  // 模拟 AI 回复
   isLoading.value = true;
+  
+  // 1. 视觉缓冲池 (打字机效果)
+  let outputQueue = ''; 
+  let isStreamDone = false;
+  
+  // 2. 启动打字机定时器 (纯视觉逻辑，不变)
+  messages.value.push({ role: 'ai', content: '' });
+  const activeMessage = messages.value[messages.value.length - 1];
+  
+  const timer = setInterval(() => {
+    if (outputQueue.length > 0) {
+      activeMessage.content += outputQueue[0];
+      outputQueue = outputQueue.slice(1);
+      scrollToBottom();
+    } else if (isStreamDone) {
+      clearInterval(timer);
+    }
+  }, 30);
 
-  // 模拟网络请求
-  setTimeout(() => {
-    // 这里也可以用 props.context 来模拟不同的回复口吻
-    messages.value.push({
-      role: 'ai',
-      content: `[${props.context}模式] 针对"${text}"的回答：这是一个非常好的问题...`
+  try {
+    const response = await fetch('http://localhost:8081/llm/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: messages.value,
+        prompt: text,
+        contextType: props.context
+      })
     });
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    
+    // 【优化】不再手动处理 JSON 碎片，而是按行读取 SSE
+    let buffer = '';
+    
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        isStreamDone = true;
+        break;
+      }
+
+      // 解码并拼接到缓冲区
+      buffer += decoder.decode(value, { stream: true });
+      
+      // 按行切割 (SSE 标准是双换行 \n\n，这里为了兼容简单写 \n)
+      const lines = buffer.split('\n');
+      
+      // 保留最后一个可能不完整的片段到下一次循环
+      buffer = lines.pop(); 
+
+      for (const line of lines) {
+        if (line.startsWith('data:')) {
+          const jsonStr = line.replace('data:', '').trim();
+          if (!jsonStr || jsonStr === '[DONE]') continue;
+
+          try {
+            // 解析简单的数据包
+            const data = JSON.parse(jsonStr);
+            
+            // --- 核心业务区分逻辑 ---
+            if (data.type === 'text') {
+              // 1. 如果是文本：加入打字机队列
+              outputQueue += data.content;
+            } 
+            else if (data.type === 'cmd') {
+              // 2. 如果是操作指令：直接执行函数
+              handleCommand(data);
+            }
+            // -----------------------
+            
+          } catch (e) {
+            console.warn('非 JSON 数据:', jsonStr);
+          }
+        }
+      }
+    }
+
+  } catch (err) {
+    console.error(err);
+    activeMessage.content += '\n[出错]';
+    clearInterval(timer);
+  } finally {
     isLoading.value = false;
-    scrollToBottom();
-  }, 800);
+  }
+};
+
+// 单独抽离：处理指令的函数
+const handleCommand = (cmdData) => {
+  console.log('收到指令:', cmdData);
+  executeChatCommand(cmdData);
 };
 
 const scrollToBottom = () => {
@@ -105,7 +185,6 @@ const scrollToBottom = () => {
 </script>
 
 <style scoped>
-/* 你的 CSS 写得没问题，直接保留即可 */
 .chat-widget-container {
   position: fixed;
   bottom: 20px;
