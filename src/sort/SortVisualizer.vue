@@ -28,6 +28,7 @@
 
   <AIChatWindow
   :context="'排序算法'"
+  :on-command="executeCommand"
   />
   
 </template>

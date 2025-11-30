@@ -97,6 +97,7 @@ export function useSorting() {
 
   // 通用包装器
   const runSortAlgorithm = async (algorithmFn) => {
+    console.log(`isSorting.value: ${isSorting.value}, array length: ${array.value.length}`);
     if (isSorting.value || array.value.length === 0) return;
     isSorting.value = true;
     resetState();

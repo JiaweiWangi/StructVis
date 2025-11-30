@@ -43,7 +43,10 @@
 
     </div>
     
-    <AIChatWindow :context="'图算法'" />
+    <AIChatWindow 
+    :context="'图算法'"
+    :on-command="executeCommand"
+    />
   </div>
 </template>
 

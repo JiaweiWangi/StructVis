@@ -50,6 +50,10 @@ const props = defineProps({
   context: {
     type: String,
     default: '通用'
+  },
+  onCommand: {
+    type: Function,
+    default: null
   }
 });
 
@@ -144,11 +148,9 @@ const sendMessage = async () => {
             
             // --- 核心业务区分逻辑 ---
             if (data.type === 'text') {
-              // 1. 如果是文本：加入打字机队列
               outputQueue += data.content;
             } 
             else if (data.type === 'cmd') {
-              // 2. 如果是操作指令：直接执行函数
               handleCommand(data);
             }
             // -----------------------
@@ -171,8 +173,14 @@ const sendMessage = async () => {
 
 // 单独抽离：处理指令的函数
 const handleCommand = (cmdData) => {
-  console.log('收到指令:', cmdData);
-  executeChatCommand(cmdData);
+  console.log('AI 请求执行指令:', cmdData);
+    
+    // 【修改】直接调用父组件传进来的函数
+    if (props.onCommand) {
+      props.onCommand(cmdData.content);
+    } else {
+      console.warn('未传入 onCommand 处理函数，指令无法执行');
+    }
 };
 
 const scrollToBottom = () => {
