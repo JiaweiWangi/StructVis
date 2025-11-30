@@ -44,7 +44,7 @@
     </div>
     
     <AIChatWindow 
-    :context="'图算法'"
+    :context="'图论算法'"
     :on-command="executeCommand"
     />
   </div>
