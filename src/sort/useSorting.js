@@ -9,7 +9,7 @@ export function useSorting() {
   const isSorting = ref(false);
 
   // --- DSL 命令行的状态 ---
-  const commandOutput = ref('');
+  const commandOutput = ref('Ready.');
   const isCommandError = ref(false);
 
   // --- 样式与布局常量 ---
