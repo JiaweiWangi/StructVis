@@ -1,9 +1,11 @@
 <template>
   <div class="graph-visualizer">
+    <button class="back-btn" @click="goBack">
+      &lt; 返回上一页
+    </button>
+
     <div class="main-content">
-      
       <div class="left-panel">
-        
         <GraphControls 
           :nodes="nodes"
           :is-visualizing="isVisualizing"
@@ -34,37 +36,44 @@
           :is-error="isCommandError"
           @execute="executeCommand"
         />
-        
       </div>
 
       <div class="right-panel">
         <GraphDataViews :nodes="nodes" :edges="edges" />
       </div>
-
     </div>
     
     <AIChatWindow 
-    :context="'图论算法'"
-    :on-command="executeCommand"
+      :context="'图论算法'"
+      :on-command="executeCommand"
     />
   </div>
 </template>
 
 <script setup>
 import { onMounted, ref } from 'vue';
-import { useGraph } from './useGraph.js'; // 假设这个路径没变
-// 引入拆分后的组件
+import { useRouter } from 'vue-router';
+import { useGraph } from './useGraph.js'; 
 import GraphControls from './GraphControls.vue';
 import GraphCanvas from './GraphCanvas.vue';
 import CommandBar from './CommandBar.vue';
 import GraphDataViews from './GraphDataViews.vue';
 import AIChatWindow from '../chat/AIChatWindow.vue';
 
+const router = useRouter();
+
+const goBack = () => {
+  if (window.history.length > 1) {
+    router.back();
+  } else {
+    router.push('/');
+  }
+};
+
 onMounted(() => {
   document.title = '图算法可视化器';
 });
 
-// --- 使用 Composable ---
 const {
   nodes,
   edges,
@@ -81,31 +90,22 @@ const {
   getNodeStroke,
   getEdgeColor,
   getEdgeWidth,
-  commandOutput,   // 绑定给 CommandBar 显示消息
-  isCommandError,  // 绑定给 CommandBar 显示红色错误
-  executeCommand,  // 绑定给 CommandBar 处理回车事件
+  commandOutput,
+  isCommandError,
+  executeCommand,
 } = useGraph();
 
-// --- 布局常量 ---
 const svgWidth = ref(700);
 const svgHeight = ref(400);
 
-// --- 处理来自子组件的事件 ---
 const handleAddNode = (id) => {
-  // 调用 JS 里的逻辑，传入 ID 和 画布宽高
   const result = addNode(id, svgWidth.value, svgHeight.value);
-  
-  if (!result.success) {
-    alert(result.message); // UI 层负责弹出提示
-  }
+  if (!result.success) alert(result.message);
 };
 
 const handleAddEdge = ({ source, target, weight }) => {
   const result = addEdge(source, target, weight);
-  
-  if (!result.success) {
-    alert(result.message);
-  }
+  if (!result.success) alert(result.message);
 };
 </script>
 
@@ -114,10 +114,36 @@ const handleAddEdge = ({ source, target, weight }) => {
 .graph-visualizer {
   display: flex;
   flex-direction: column;
+  padding: 20px; 
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #2c3e50;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+/* --- 返回按钮：悬浮固定在左上角 --- */
+.back-btn {
+  position: fixed; 
+  top: 20px;       
+  left: 20px;     
+  z-index: 1000;  
+  
+  padding: 8px 16px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #666;
+  font-size: 14px;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.back-btn:hover {
+  background-color: #f5f5f5;
+  color: #333;
+  border-color: #ccc;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .main-content {

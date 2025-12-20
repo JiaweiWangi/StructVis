@@ -1,5 +1,9 @@
 <template>
   <div class="sort-visualizer">
+    <button class="back-btn" @click="goBack">
+      &lt; 返回上一页
+    </button>
+
     <SortControls
       v-model:arrayCount="arrayCount"
       v-model:animationDelay="animationDelay"
@@ -27,23 +31,36 @@
   </div>
 
   <AIChatWindow
-  :context="'排序算法'"
-  :on-command="executeCommand"
+    :context="'排序算法'"
+    :on-command="executeCommand"
   />
-  
 </template>
 
 <script setup>
 import { onMounted } from 'vue';
-// 1. 引入逻辑 Composable
-import { useSorting } from './useSorting.js'; // 假设放在同一目录
-// 2. 引入 UI 子组件
+import { useRouter } from 'vue-router';
+
+// 引入逻辑 Composable
+import { useSorting } from './useSorting.js';
+// 引入 UI 子组件
 import SortControls from './SortControls.vue';
 import SortBars from './SortBars.vue';
 import CommandBar from './CommandBar.vue';
 import AIChatWindow from '../chat/AIChatWindow.vue';
 
-// 3. 调用 Composable 获取数据和方法
+// 初始化 Router
+const router = useRouter();
+
+// 定义返回函数
+const goBack = () => {
+  if (window.history.length > 1) {
+    router.back();
+  } else {
+    router.push('/');
+  }
+};
+
+// 调用 Composable 获取数据和方法
 const {
   array,
   arrayCount,
@@ -53,10 +70,10 @@ const {
   containerWidth,
   getBarColor,
   generateRandomArray,
-  commandOutput,   // 绑定给 CommandBar 显示消息
-  isCommandError,  // 绑定给 CommandBar 显示红色错误
-  executeCommand,  // 绑定给 CommandBar 处理回车事件
-  triggerSort      // 绑定给 Controls 按钮点击
+  commandOutput,
+  isCommandError,
+  executeCommand,
+  triggerSort
 } = useSorting();
 
 // 生命周期
@@ -77,5 +94,30 @@ onMounted(() => {
   color: #333;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+/* --- 返回按钮：悬浮固定在左上角 --- */
+.back-btn {
+  position: fixed; 
+  top: 20px;       
+  left: 20px;    
+  z-index: 1000; 
+
+  padding: 8px 16px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #666;
+  font-size: 14px;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.back-btn:hover {
+  background-color: #f5f5f5;
+  color: #333;
+  border-color: #ccc;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 </style>
