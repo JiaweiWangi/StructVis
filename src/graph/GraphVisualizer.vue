@@ -56,7 +56,7 @@ import { useRouter } from 'vue-router';
 import { useGraph } from './useGraph.js'; 
 import GraphControls from './GraphControls.vue';
 import GraphCanvas from './GraphCanvas.vue';
-import CommandBar from './CommandBar.vue';
+import CommandBar from '../components/CommandBar.vue';
 import GraphDataViews from './GraphDataViews.vue';
 import AIChatWindow from '../chat/AIChatWindow.vue';
 

@@ -45,7 +45,7 @@ import { useSorting } from './useSorting.js';
 // 引入 UI 子组件
 import SortControls from './SortControls.vue';
 import SortBars from './SortBars.vue';
-import CommandBar from './CommandBar.vue';
+import CommandBar from '../components/CommandBar.vue';
 import AIChatWindow from '../chat/AIChatWindow.vue';
 
 // 初始化 Router
