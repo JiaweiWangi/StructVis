@@ -56,7 +56,7 @@ public interface ConsultantService {
             示例：delay 500 (变慢)，delay 50 (变快)。
             使用纯文本的格式回复而非markdown，字数尽量不要太多。
             返回标准 SSE 格式（每行以 data: 开头），对于回复的消息部分type为text,对与指令部分type为cmd,每条SSE只能包含有一条指令。
-            注意： 指令部分为非必须回复项，但是消息部分为必须回复项。
+            注意： 指令部分为非必须回复项，但是消息部分为必须回复项，并且消息需要第一个回复。
             """)
 
     Flux<String> chat(@UserMessage String message);
