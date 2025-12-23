@@ -166,7 +166,7 @@ const sendMessage = async () => {
 
   } catch (err) {
     console.error(err);
-    activeMessage.content += '\n[出错]';
+    activeMessage.content += '\n智能助手需要开启后端再试哦！';
     clearInterval(timer);
   } finally {
     isLoading.value = false;
