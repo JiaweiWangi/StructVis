@@ -75,6 +75,9 @@ const toggleChat = () => {
   isOpen.value = !isOpen.value;
 };
 
+// 正确的 sleep 实现：返回 Promise
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 const sendMessage = async () => {
   const text = inputContent.value.trim();
   if (!text) return;
@@ -134,14 +137,12 @@ const sendMessage = async () => {
       // 按行切割 (SSE 标准是双换行 \n\n，这里为了兼容简单写 \n)
       const lines = buffer.split('\n');
       
-      // 保留最后一个可能不完整的片段到下一次循环
-      buffer = lines.pop(); 
-
       for (const line of lines) {
         if (line.startsWith('data:')) {
+          console.log('接收到数据行:', line);
           const jsonStr = line.replace('data:', '').trim();
           if (!jsonStr || jsonStr === '[DONE]') continue;
-
+          
           try {
             // 解析简单的数据包
             const data = JSON.parse(jsonStr);
@@ -159,6 +160,7 @@ const sendMessage = async () => {
             console.warn('非 JSON 数据:', jsonStr);
           }
         }
+        await sleep(1000); // 轻微延迟，保证动画完整展示
       }
     }
 
