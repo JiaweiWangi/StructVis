@@ -34,6 +34,7 @@
           :is-visualizing="isVisualizing"
           :output="commandOutput"
           :is-error="isCommandError"
+          :placeholder="'输入指令，例如: new random 或 run bfs，按下回车执行'"
           @execute="executeCommand"
         />
       </div>
