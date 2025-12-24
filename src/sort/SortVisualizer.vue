@@ -11,6 +11,8 @@
       :arrayLength="array.length"
       @generate="generateRandomArray"
       @startSort="triggerSort"
+      @save-sorting="handleSaveSorting"
+      @load-sorting="handleLoadSorting"
     />
 
     <SortBars
@@ -73,7 +75,9 @@ const {
   commandOutput,
   isCommandError,
   executeCommand,
-  triggerSort
+  triggerSort,
+  saveSortingData,
+  loadSortingData
 } = useSorting();
 
 // 生命周期
@@ -81,6 +85,20 @@ onMounted(() => {
   document.title = '排序算法可视化器';
   generateRandomArray();
 });
+
+// 处理保存
+const handleSaveSorting = () => {
+  saveSortingData();
+};
+
+// 处理加载
+const handleLoadSorting = async (file) => {
+  try {
+    await loadSortingData(file);
+  } catch (err) {
+    console.error('加载文件失败:', err);
+  }
+};
 </script>
 
 <style scoped>

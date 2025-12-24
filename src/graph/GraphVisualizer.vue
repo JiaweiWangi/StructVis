@@ -17,6 +17,8 @@
           @add-edge="handleAddEdge"
           @run-bfs="runBFS"
           @run-dfs="runDFS"
+          @save-graph="handleSaveGraph"
+          @load-graph="handleLoadGraph"
         />
 
         <GraphCanvas
@@ -94,6 +96,8 @@ const {
   commandOutput,
   isCommandError,
   executeCommand,
+  saveGraphData,
+  loadGraphData
 } = useGraph();
 
 const svgWidth = ref(700);
@@ -107,6 +111,18 @@ const handleAddNode = (id) => {
 const handleAddEdge = ({ source, target, weight }) => {
   const result = addEdge(source, target, weight);
   if (!result.success) alert(result.message);
+};
+
+const handleSaveGraph = () => {
+  saveGraphData();
+};
+
+const handleLoadGraph = async (file) => {
+  try {
+    await loadGraphData(file);
+  } catch (err) {
+    console.error('加载文件失败:', err);
+  }
 };
 </script>
 

@@ -7,6 +7,19 @@
       <button @click="$emit('restore-default')" :disabled="isVisualizing">
         恢复默认图
       </button>
+      <button @click="$emit('save-graph')" :disabled="isVisualizing" class="save-btn" title="保存当前图数据为 JSON 文件">
+        💾 保存
+      </button>
+      <button @click="triggerLoadFile" :disabled="isVisualizing" class="load-btn" title="从 JSON 文件加载图数据">
+        📂 打开
+      </button>
+      <input
+        ref="fileInput"
+        type="file"
+        accept=".json"
+        style="display: none;"
+        @change="onFileSelected"
+      />
     </div>
 
     <div class="controls main-controls">
@@ -84,7 +97,8 @@ const emit = defineEmits([
   'generate-random', 'restore-default', 
   'add-node', 'add-edge', 
   'run-bfs', 'run-dfs',
-  'update:startNode', 'update:animationDelay'
+  'update:startNode', 'update:animationDelay',
+  'save-graph', 'load-graph'
 ]);
 
 // 本地状态（表单输入）
@@ -92,6 +106,7 @@ const newNodeId = ref('');
 const sourceNodeInput = ref('');
 const targetNodeInput = ref('');
 const edgeWeightInput = ref(1);
+const fileInput = ref(null);
 
 // 处理添加节点
 const onAddNode = () => {
@@ -110,6 +125,23 @@ const onAddEdge = () => {
   sourceNodeInput.value = '';
   targetNodeInput.value = '';
   edgeWeightInput.value = 1;
+};
+
+// 触发文件选择
+const triggerLoadFile = () => {
+  fileInput.value?.click();
+};
+
+// 处理文件选择
+const onFileSelected = (event) => {
+  const file = event.target.files?.[0];
+  if (file) {
+    emit('load-graph', file);
+    // 重置文件输入，使用户可以重新选择相同的文件
+    if (fileInput.value) {
+      fileInput.value.value = '';
+    }
+  }
 };
 </script>
 
@@ -194,6 +226,10 @@ button:disabled {
 
 .primary-btn { background-color: #8e44ad; }
 .primary-btn:hover:not(:disabled) { background-color: #9b59b6; }
+.save-btn { background-color: #3498db; }
+.save-btn:hover:not(:disabled) { background-color: #2980b9; }
+.load-btn { background-color: #16a085; }
+.load-btn:hover:not(:disabled) { background-color: #1abc9c; }
 .algo-btn { background-color: #27ae60; min-width: 90px; }
 .algo-btn:hover:not(:disabled) { background-color: #2ecc71; }
 .small-btn { padding: 5px 8px; font-size: 11px; }

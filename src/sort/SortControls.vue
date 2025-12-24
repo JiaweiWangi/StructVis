@@ -36,10 +36,26 @@
       />
       <span>{{ animationDelay }}ms</span>
     </div>
+
+    <button @click="$emit('save-sorting')" :disabled="isSorting || arrayLength === 0" class="save-btn" title="保存当前排序数据">
+      💾 保存
+    </button>
+    <button @click="triggerLoadFile" :disabled="isSorting" class="load-btn" title="加载排序数据">
+      📂 打开
+    </button>
+    <input
+      ref="fileInput"
+      type="file"
+      accept=".json"
+      style="display: none;"
+      @change="onFileSelected"
+    />
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue';
+
 // 定义接收的 props
 defineProps({
   arrayCount: { type: Number, required: true },
@@ -49,12 +65,33 @@ defineProps({
 });
 
 // 定义组件抛出的事件
-defineEmits([
+const emit = defineEmits([
     'update:arrayCount',
     'update:animationDelay',
     'generate',
-    'startSort'
+    'startSort',
+    'save-sorting',
+    'load-sorting'
 ]);
+
+const fileInput = ref(null);
+
+// 触发文件选择
+const triggerLoadFile = () => {
+  fileInput.value?.click();
+};
+
+// 处理文件选择
+const onFileSelected = (event) => {
+  const file = event.target.files?.[0];
+  if (file) {
+    emit('load-sorting', file);
+    // 重置文件输入
+    if (fileInput.value) {
+      fileInput.value.value = '';
+    }
+  }
+};
 </script>
 
 <style scoped>
@@ -111,4 +148,9 @@ input[type=range] {
   cursor: not-allowed;
   box-shadow: none;
 }
+
+.save-btn { background-color: #3498db; }
+.save-btn:hover:not(:disabled) { background-color: #2980b9; }
+.load-btn { background-color: #16a085; }
+.load-btn:hover:not(:disabled) { background-color: #1abc9c; }
 </style>
