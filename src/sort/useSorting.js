@@ -305,6 +305,79 @@ export function useSorting() {
     }
   }
 
+  // --- 保存和加载功能 ---
+  const saveSortingData = () => {
+    const sortingData = {
+      array: array.value,
+      arrayCount: arrayCount.value,
+      animationDelay: animationDelay.value,
+      timestamp: new Date().toISOString()
+    };
+    
+    // 生成文件名，包含时间戳
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const filename = `sorting_${timestamp}.json`;
+    
+    // 创建 Blob 并下载
+    const dataStr = JSON.stringify(sortingData, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    commandOutput.value = `✅ 已保存为 ${filename}`;
+    isCommandError.value = false;
+    
+    return true;
+  };
+
+  const loadSortingData = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        try {
+          const sortingData = JSON.parse(e.target.result);
+          
+          // 验证数据结构
+          if (!Array.isArray(sortingData.array) || !sortingData.arrayCount) {
+            throw new Error('文件格式不正确');
+          }
+          
+          // 清除高亮状态
+          resetState();
+          
+          // 加载数据
+          array.value = sortingData.array.map(item => ({ ...item }));
+          arrayCount.value = sortingData.arrayCount;
+          animationDelay.value = sortingData.animationDelay || 50;
+          
+          commandOutput.value = `✅ 成功加载数据`;
+          isCommandError.value = false;
+          
+          resolve(true);
+        } catch (err) {
+          isCommandError.value = true;
+          commandOutput.value = `❌ 加载失败: ${err.message}`;
+          reject(err);
+        }
+      };
+      
+      reader.onerror = () => {
+        isCommandError.value = true;
+        commandOutput.value = '❌ 读取文件失败';
+        reject(new Error('文件读取错误'));
+      };
+      
+      reader.readAsText(file);
+    });
+  };
+
   // --- 暴露给外部组件使用的方法和数据 ---
   return {
     // 数据
@@ -326,5 +399,8 @@ export function useSorting() {
     generateRandomArray,
     executeCommand,
     triggerSort,
+    // 保存/加载方法
+    saveSortingData,
+    loadSortingData
   };
 }

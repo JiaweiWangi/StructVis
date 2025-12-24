@@ -398,6 +398,79 @@ export function useGraph() {
     return highlightedEdges.value.includes(edgeId) ? 5 : 3;
   }
 
+  // --- 保存和加载功能 ---
+  const saveGraphData = () => {
+    const graphData = {
+      nodes: nodes.value,
+      edges: edges.value,
+      startNode: startNode.value,
+      timestamp: new Date().toISOString()
+    };
+    
+    // 生成文件名，包含时间戳
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const filename = `graph_${timestamp}.json`;
+    
+    // 创建 Blob 并下载
+    const dataStr = JSON.stringify(graphData, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    commandOutput.value = `✅ 已保存为 ${filename}`;
+    isCommandError.value = false;
+    
+    return true;
+  };
+
+  const loadGraphData = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        try {
+          const graphData = JSON.parse(e.target.result);
+          
+          // 验证数据结构
+          if (!Array.isArray(graphData.nodes) || !Array.isArray(graphData.edges)) {
+            throw new Error('文件格式不正确');
+          }
+          
+          // 清除可视化状态
+          clearVisualizationState();
+          
+          // 加载数据
+          nodes.value = graphData.nodes.map(n => ({ ...n }));
+          edges.value = graphData.edges.map(e => ({ ...e }));
+          startNode.value = graphData.startNode || (nodes.value.length > 0 ? nodes.value[0].id : '');
+          
+          commandOutput.value = `✅ 成功加载数据`;
+          isCommandError.value = false;
+          
+          resolve(true);
+        } catch (err) {
+          isCommandError.value = true;
+          commandOutput.value = `❌ 加载失败: ${err.message}`;
+          reject(err);
+        }
+      };
+      
+      reader.onerror = () => {
+        isCommandError.value = true;
+        commandOutput.value = '❌ 读取文件失败';
+        reject(new Error('文件读取错误'));
+      };
+      
+      reader.readAsText(file);
+    });
+  };
+
   // --- **重要：返回外部组件需要用到的所有数据和方法** ---
   return {
     // 数据 ref
@@ -427,6 +500,9 @@ export function useGraph() {
     getEdgeWidth,
     commandOutput,   // 绑定给 CommandBar 显示消息
     isCommandError,  // 绑定给 CommandBar 显示红色错误
-    executeCommand  // 绑定给 CommandBar 处理回车事件
+    executeCommand,  // 绑定给 CommandBar 处理回车事件
+    // 保存/加载方法
+    saveGraphData,
+    loadGraphData
   };
 }
