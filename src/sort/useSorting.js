@@ -171,12 +171,28 @@ export function useSorting() {
     }
   };
 
-  // 4. 快速排序
+  const selectPivot = (low, high) => {
+    return Math.floor((low + high) / 2);
+  }
+
   const partition = async (low, high) => {
-    let pivotIndex = high;
-    let pivotValue = array.value[pivotIndex].value;
-    purpleIndices.value = [pivotIndex];
+    // --- 步骤 A: 先取中间值 ---
+    let midIndex = selectPivot(low, high);
+    
+    // 可视化：标示出选中的是中间这个数
+    purpleIndices.value = [midIndex];
     await sleep(animationDelay.value);
+
+    // --- 步骤 B: 将枢轴交换到数组末尾 (high) ---
+    if (midIndex !== high) {
+        await performSwap(midIndex, high);
+    }
+    
+    // --- 步骤 C: 现在的枢轴就在 high 位置了，接下来的逻辑不用变 ---
+    let pivotIndex = high; 
+    let pivotValue = array.value[pivotIndex].value;
+    
+    purpleIndices.value = [pivotIndex]; 
 
     let i = (low - 1);
     for (let j = low; j <= high - 1; j++) {
