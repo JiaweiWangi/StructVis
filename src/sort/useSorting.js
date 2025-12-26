@@ -175,35 +175,41 @@ export function useSorting() {
     return Math.floor((low + high) / 2);
   }
 
-  const partition = async (low, high) => {
-    // --- 步骤 A: 先取中间值 ---
+const partition = async (low, high) => {
     let midIndex = selectPivot(low, high);
-    
-    // 可视化：标示出选中的是中间这个数
     purpleIndices.value = [midIndex];
     await sleep(animationDelay.value);
 
-    // --- 步骤 B: 将枢轴交换到数组末尾 (high) ---
+    // 先把枢轴放到最右边
     if (midIndex !== high) {
         await performSwap(midIndex, high);
     }
     
-    // --- 步骤 C: 现在的枢轴就在 high 位置了，接下来的逻辑不用变 ---
-    let pivotIndex = high; 
-    let pivotValue = array.value[pivotIndex].value;
-    
-    purpleIndices.value = [pivotIndex]; 
+    let pivotValue = array.value[high].value;
+    let l = low;
+    let r = high - 1; // 注意这里，从 high-1 开始，因为 high 是枢轴
 
-    let i = (low - 1);
-    for (let j = low; j <= high - 1; j++) {
-      await highlightCompare(j, pivotIndex);
-      if (array.value[j].value < pivotValue) {
-        i++;
-        await performSwap(i, j);
+    while (l <= r) {
+      // 左边找大的
+      while (l <= r && array.value[l].value < pivotValue) {
+         await highlightCompare(l, high);
+         l++;
+      }
+      // 右边找小的
+      while (l <= r && array.value[r].value > pivotValue) {
+         await highlightCompare(r, high);
+         r--;
+      }
+      
+      if (l <= r) {
+         await performSwap(l, r);
+         l++;
+         r--;
       }
     }
-    await performSwap(i + 1, high);
-    return (i + 1);
+    // 最后把枢轴放回中间
+    await performSwap(l, high);
+    return l;
   }
 
   const quickSortRecursive = async (low, high) => {
